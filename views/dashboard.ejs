@@ -17,17 +17,19 @@
   <link rel="stylesheet" href="/css/main.css">
 </head>
 
-<body>
+<body class="admin-page">
   <main class="bmd-layout-content">
     <div class="container py-5">
-      <div class="card shade p-4">
+      <div class="card shade p-4 admin-card">
         <div class="d-flex align-items-center justify-content-between flex-wrap">
           <div>
             <img src="/svg/logo.svg" alt="Nozha" height="80" width="190">
             <h1 class="h4 mt-3 mb-1">Welcome, <%= user.name %></h1>
             <p class="text-muted mb-0"><%= user.email %></p>
+            <p class="auth-status mb-0 mt-2">Authenticated with Passport.js Local Strategy</p>
           </div>
           <form method="post" action="/auth/logout" class="mt-3 mt-md-0">
+            <a class="btn shade mr-2" href="/norzha-rti-dashboard-master/">Nozha Template</a>
             <a class="btn shade mr-2" href="/users">Users DB</a>
             <button type="submit" class="btn shade f-primary">Logout</button>
           </form>

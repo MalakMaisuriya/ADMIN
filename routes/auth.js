@@ -1,14 +1,12 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const passport = require('passport');
 const { getDb } = require('../db');
 const { redirectIfAuthenticated } = require('../middleware/auth');
+const { normalizeEmail } = require('../config/passport');
 
 const router = express.Router();
 const SALT_ROUNDS = 12;
-
-function normalizeEmail(email) {
-  return String(email || '').trim().toLowerCase();
-}
 
 function renderLogin(res, options = {}) {
   return res.render('login', {
@@ -34,7 +32,7 @@ router.get('/login', redirectIfAuthenticated, (req, res) => {
   renderLogin(res, { message: req.query.registered ? 'Account created. Please login.' : null });
 });
 
-router.post('/login', redirectIfAuthenticated, asyncHandler(async (req, res) => {
+router.post('/login', redirectIfAuthenticated, (req, res, next) => {
   const email = normalizeEmail(req.body.email);
   const password = String(req.body.password || '');
 
@@ -42,26 +40,24 @@ router.post('/login', redirectIfAuthenticated, asyncHandler(async (req, res) => 
     return renderLogin(res, { error: 'Email and password are required.' });
   }
 
-  const db = await getDb();
-  const user = await db.get('SELECT id, name, email, password_hash FROM users WHERE email = ?', email);
+  passport.authenticate('local', (error, user, info) => {
+    if (error) {
+      return next(error);
+    }
 
-  if (!user) {
-    return renderLogin(res, { error: 'Invalid email or password.' });
-  }
+    if (!user) {
+      return renderLogin(res, { error: info?.message || 'Invalid email or password.' });
+    }
 
-  const passwordMatches = await bcrypt.compare(password, user.password_hash);
-  if (!passwordMatches) {
-    return renderLogin(res, { error: 'Invalid email or password.' });
-  }
+    return req.login(user, (loginError) => {
+      if (loginError) {
+        return next(loginError);
+      }
 
-  req.session.user = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-  };
-
-  return res.redirect('/dashboard');
-}));
+      return res.redirect('/dashboard');
+    });
+  })(req, res, next);
+});
 
 router.get('/signup', redirectIfAuthenticated, (req, res) => {
   renderSignup(res);
@@ -104,13 +100,19 @@ router.post('/signup', redirectIfAuthenticated, asyncHandler(async (req, res) =>
 }));
 
 router.post('/logout', (req, res, next) => {
-  req.session.destroy((error) => {
-    if (error) {
-      return next(error);
+  req.logout((logoutError) => {
+    if (logoutError) {
+      return next(logoutError);
     }
 
-    res.clearCookie('connect.sid');
-    return res.redirect('/auth/login');
+    return req.session.destroy((error) => {
+      if (error) {
+        return next(error);
+      }
+
+      res.clearCookie('connect.sid');
+      return res.redirect('/auth/login');
+    });
   });
 });
 

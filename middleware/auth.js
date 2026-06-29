@@ -1,5 +1,5 @@
 function requireAuth(req, res, next) {
-  if (!req.session.user) {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
     return res.redirect('/auth/login');
   }
 
@@ -7,7 +7,7 @@ function requireAuth(req, res, next) {
 }
 
 function redirectIfAuthenticated(req, res, next) {
-  if (req.session.user) {
+  if (req.isAuthenticated && req.isAuthenticated()) {
     return res.redirect('/dashboard');
   }
 

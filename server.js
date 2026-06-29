@@ -1,12 +1,16 @@
 const express = require('express');
 const session = require('express-session');
+const passport = require('passport');
 const path = require('path');
 const authRoutes = require('./routes/auth');
+const { configurePassport } = require('./config/passport');
 const { getDb } = require('./db');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+configurePassport(passport);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -22,9 +26,11 @@ app.use(session({
     sameSite: 'lax',
   },
 }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.get('/', (req, res) => {
-  res.redirect(req.session.user ? '/dashboard' : '/auth/login');
+  res.redirect(req.isAuthenticated() ? '/dashboard' : '/auth/login');
 });
 
 app.use('/auth', authRoutes);
@@ -45,8 +51,12 @@ app.post('/signup', (req, res) => {
   res.redirect(307, '/auth/signup');
 });
 
+app.get('/norzha-rti-dashboard-master', (req, res) => {
+  res.redirect('/norzha-rti-dashboard-master/');
+});
+
 app.get('/dashboard', requireAuth, (req, res) => {
-  res.render('dashboard', { user: req.session.user });
+  res.render('dashboard', { user: req.user });
 });
 
 app.get('/users', requireAuth, async (req, res, next) => {

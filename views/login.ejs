@@ -24,14 +24,18 @@
   <link rel="stylesheet" href="/css/main.css">
 </head>
 
-<body>
+<body class="auth-page">
   <div class="bmd-layout-container bmd-drawer-f-l avam-container animated">
     <main class="bmd-layout-content">
       <div class="container-fluid">
         <div class="main_wrapper">
           <div class="row">
-            <div class="col-md-5 card shade mw-center mh-center">
+            <div class="col-md-5 card shade mw-center mh-center auth-card">
               <img src="/svg/logo.svg" alt="Nozha" class="mw-center" height="130" width="300">
+              <div class="auth-heading">
+                <h1>Welcome back</h1>
+                <p>Login with your Passport local account.</p>
+              </div>
               <hr class="hr-dashed m-0">
               <% if (message) { %>
                 <div class="alert alert-success" role="alert"><%= message %></div>
